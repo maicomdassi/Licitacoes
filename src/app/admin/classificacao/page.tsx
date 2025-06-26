@@ -381,7 +381,14 @@ export default function ClassificacaoPage() {
           </Button>
         </div>
 
-
+        {/* Card para Detecção de Duplicados */}
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+          <div className="flex items-center mb-4">
+            <Copy className="h-6 w-6 text-purple-600 mr-2" />
+            <h2 className="text-xl font-semibold text-gray-900">Detectar Duplicados</h2>
+          </div>
+          
+          {!isDetectingDuplicates && !duplicados && (
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <label className="text-sm font-medium text-gray-700">

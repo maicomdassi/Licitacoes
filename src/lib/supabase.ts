@@ -114,7 +114,7 @@ export async function testConnection() {
       const fetchResponse = await fetch(`${supabaseUrl}/rest/v1/`, {
         method: 'HEAD',
         headers: {
-          'apikey': supabaseKey,
+          'apikey': supabaseKey || '',
           'Content-Type': 'application/json'
         }
       });
