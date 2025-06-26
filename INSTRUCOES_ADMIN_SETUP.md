@@ -2,7 +2,7 @@
 
 ## Passo 1: Registrar Usuário
 1. Acesse: http://localhost:3000/login
-2. **REGISTRE-SE** com email: `maicomdassi@gmail.com`
+2. **REGISTRE-SE** com seu email
 3. Faça login no sistema
 
 ## Passo 2: Executar SQL no Supabase
@@ -31,18 +31,18 @@ CREATE POLICY "Users can view own profile" ON profiles
 CREATE POLICY "Users can update own profile" ON profiles
   FOR UPDATE USING (auth.uid() = id);
 
--- Inserir perfil admin para maicomdassi@gmail.com
+-- Inserir perfil admin para o primeiro usuário (substitua pelo seu email)
 INSERT INTO profiles (id, email, role)
 SELECT 
   id, 
   email, 
   'admin' as role
 FROM auth.users
-WHERE email = 'maicomdassi@gmail.com'
+WHERE email = 'seu-email@exemplo.com'  -- SUBSTITUA PELO SEU EMAIL
 ON CONFLICT (id) DO UPDATE SET role = 'admin';
 
--- Verificar se foi criado
-SELECT * FROM profiles WHERE email = 'maicomdassi@gmail.com';
+-- Verificar se foi criado (substitua pelo seu email)
+SELECT * FROM profiles WHERE email = 'seu-email@exemplo.com';
 ```
 
 ## Passo 3: Configurar Tabela de Configurações
@@ -79,17 +79,22 @@ CREATE INDEX IF NOT EXISTS idx_configuracoes_chave ON configuracoes(chave);
 5. O filtro de portal deve estar em **compras.rs.gov.br** por padrão
 
 ## ✅ Resultado Esperado
-- Sidebar aparece apenas para maicomdassi@gmail.com
+- Sidebar aparece apenas para usuários com role 'admin'
 - Outros usuários não veem a sidebar
 - Portal padrão: **compras.rs.gov.br**
 - Página de configurações funcionando: http://localhost:3000/admin/configuracoes
 
 ## 🔍 Verificar se funcionou
-Execute no SQL Editor para confirmar:
+Execute no SQL Editor para confirmar (substitua pelo seu email):
 ```sql
-SELECT email, role FROM profiles WHERE email = 'maicomdassi@gmail.com';
+SELECT email, role FROM profiles WHERE email = 'seu-email@exemplo.com';
 SELECT * FROM configuracoes WHERE chave = 'portal_padrao';
 ```
 Deve retornar: 
-- `maicomdassi@gmail.com | admin`
-- `portal_padrao | compras.rs.gov.br` 
+- `seu-email@exemplo.com | admin`
+- `portal_padrao | compras.rs.gov.br`
+
+## 🚀 Alternativa: Usar API para Promover Admin
+Se preferir, após fazer login, acesse:
+- http://localhost:3000/api/force-admin (método POST)
+- Esta API promove o usuário atual a admin automaticamente (apenas se não houver outros admins) 

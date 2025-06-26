@@ -88,10 +88,11 @@ CREATE TRIGGER handle_profiles_updated_at
     console.log(`📋 Encontrados ${users.users.length} usuários`)
     
     // Sincronizar todos os usuários na tabela profiles
+    // Todos os usuários começam como 'user' por padrão
     const profilesToUpsert = users.users.map((user: any) => ({
       id: user.id,
       email: user.email,
-      role: user.email === 'maicomdassi@gmail.com' ? 'admin' : 'user'
+      role: 'user' // Todos começam como usuários comuns
     }))
     
     console.log('📝 Sincronizando perfis:', profilesToUpsert)
@@ -110,14 +111,10 @@ CREATE TRIGGER handle_profiles_updated_at
       }, { status: 500 })
     }
     
-    // Verificar se o admin foi criado
-    const adminProfile = upsertedProfiles?.find((p: any) => p.email === 'maicomdassi@gmail.com')
-    
     return NextResponse.json({
       success: true,
       message: `Setup concluído com sucesso! ${upsertedProfiles?.length || 0} perfis sincronizados.`,
-      adminCreated: !!adminProfile,
-      adminProfile: adminProfile,
+      note: 'Todos os usuários foram criados como "user". Use a API /api/force-admin para promover o primeiro administrador.',
       totalProfiles: upsertedProfiles?.length || 0,
       profiles: upsertedProfiles
     })

@@ -1,38 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabase, getCurrentUserProfile } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔧 Forçando criação do perfil admin...')
+    console.log('🔧 Promovendo usuário atual a administrador...')
     
-    // Buscar usuário maicomdassi@gmail.com
-    const { data: users, error: usersError } = await supabase.auth.admin.listUsers()
+    // Obter o usuário atual
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
     
-    if (usersError) {
+    if (userError || !user) {
       return NextResponse.json({
         success: false,
-        error: `Erro ao listar usuários: ${usersError.message}`
-      }, { status: 500 })
+        error: 'Usuário não autenticado. Faça login primeiro.'
+      }, { status: 401 })
     }
     
-    const adminUser = users.users.find((user: any) => user.email === 'maicomdassi@gmail.com')
+    console.log('👤 Usuário atual:', user.email, user.id)
     
-    if (!adminUser) {
+    // Verificar se já existe algum administrador no sistema
+    const { data: existingAdmins, error: adminCheckError } = await supabase
+      .from('profiles')
+      .select('id, email, role')
+      .eq('role', 'admin')
+    
+    if (adminCheckError) {
+      console.log('⚠️ Erro ao verificar admins existentes (tabela pode não existir):', adminCheckError)
+    }
+    
+    // Se já existem admins, não permitir auto-promoção
+    if (existingAdmins && existingAdmins.length > 0) {
       return NextResponse.json({
         success: false,
-        error: 'Usuário maicomdassi@gmail.com não encontrado. Você precisa se registrar primeiro.'
-      }, { status: 404 })
+        error: 'Já existem administradores no sistema. Solicite privilégios a um administrador existente.',
+        existingAdmins: existingAdmins.map((admin: any) => ({ email: admin.email }))
+      }, { status: 403 })
     }
     
-    console.log('👤 Usuário encontrado:', adminUser.email, adminUser.id)
-    
-    // Tentar inserir diretamente ignorando se a tabela não existe
+    // Tentar inserir/atualizar o perfil como admin
     try {
       const { data, error } = await supabase
         .from('profiles')
         .upsert({
-          id: adminUser.id,
-          email: adminUser.email,
+          id: user.id,
+          email: user.email,
           role: 'admin'
         })
         .select()
@@ -43,9 +53,9 @@ export async function POST(request: NextRequest) {
       
       return NextResponse.json({
         success: true,
-        message: 'Perfil admin criado com sucesso!',
+        message: 'Você foi promovido a administrador com sucesso!',
         profile: data?.[0],
-        userId: adminUser.id
+        userId: user.id
       })
       
     } catch (profileError: any) {
@@ -66,12 +76,19 @@ CREATE TABLE IF NOT EXISTS profiles (
 
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
--- Inserir o admin diretamente:
+-- Policies para RLS
+CREATE POLICY "Users can view own profile" ON profiles
+  FOR SELECT USING (auth.uid() = id);
+
+CREATE POLICY "Users can update own profile" ON profiles
+  FOR UPDATE USING (auth.uid() = id);
+
+-- Inserir o primeiro admin (substitua o ID pelo seu):
 INSERT INTO profiles (id, email, role) VALUES 
-('${adminUser.id}', 'maicomdassi@gmail.com', 'admin')
+('${user.id}', '${user.email}', 'admin')
 ON CONFLICT (id) DO UPDATE SET role = 'admin';
           `,
-          userId: adminUser.id
+          userId: user.id
         }, { status: 400 })
       }
       

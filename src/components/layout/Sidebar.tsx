@@ -43,6 +43,12 @@ const adminMenuItems = [
     description: 'Detectar e remover registros duplicados'
   },
   {
+    title: 'Coleta de Licitações',
+    icon: Brain,
+    href: '/admin/coleta-licitacoes',
+    description: 'Gerenciar coleta da API externa'
+  },
+  {
     title: 'Relatórios',
     icon: BarChart3,
     href: '/admin/relatorios',

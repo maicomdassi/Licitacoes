@@ -375,7 +375,7 @@ export default function UsuariosPage() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => alterarRole(usuario.id, 'user')}
-                                disabled={updatingUserId === usuario.id || usuario.email === 'maicomdassi@gmail.com'}
+                                disabled={updatingUserId === usuario.id}
                                 className="text-orange-600 border-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                               >
                                 {updatingUserId === usuario.id ? (

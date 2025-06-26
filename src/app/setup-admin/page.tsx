@@ -50,7 +50,7 @@ export default function SetupAdminPage() {
             </div>
             <CardTitle className="text-2xl">Setup do Sistema de Admin</CardTitle>
             <CardDescription>
-              Configure a tabela de perfis e defina maicomdassi@gmail.com como administrador
+              Configure a tabela de perfis no banco de dados
             </CardDescription>
           </CardHeader>
           
@@ -60,7 +60,7 @@ export default function SetupAdminPage() {
               <ul className="text-sm text-muted-foreground space-y-1">
                 <li>• Verificar se a tabela `profiles` existe</li>
                 <li>• Configurar políticas de segurança (RLS)</li>
-                <li>• Definir maicomdassi@gmail.com como administrador</li>
+                <li>• Criar estrutura de perfis de usuário</li>
                 <li>• Criar estrutura para gerenciamento de usuários</li>
               </ul>
             </div>

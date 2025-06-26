@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabase, getCurrentUserProfile } from '@/lib/supabase'
 
 // GET - Listar todos os usuários
 export async function GET(request: NextRequest) {
@@ -101,11 +101,20 @@ export async function PUT(request: NextRequest) {
       }, { status: 404 })
     }
 
-    // Proteção: não permitir remover admin do maicomdassi@gmail.com
-    if (existingProfile.email === 'maicomdassi@gmail.com' && role === 'user') {
+    // Proteção: verificar se o usuário atual tem permissão para alterar roles
+    const { data: currentProfile } = await getCurrentUserProfile()
+    if (!currentProfile || currentProfile.role !== 'admin') {
       return NextResponse.json({
         success: false,
-        error: 'Não é possível remover privilégios de admin do usuário principal'
+        error: 'Apenas administradores podem alterar roles de usuários'
+      }, { status: 403 })
+    }
+
+    // Proteção: não permitir que um admin remova seus próprios privilégios
+    if (existingProfile.id === currentProfile.id && role === 'user') {
+      return NextResponse.json({
+        success: false,
+        error: 'Você não pode remover seus próprios privilégios de administrador'
       }, { status: 403 })
     }
 

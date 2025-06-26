@@ -90,10 +90,8 @@ Para distribuir o aplicativo para outros computadores:
 
 Ao executar o aplicativo pela primeira vez, você precisará configurar a conexão com o banco de dados Supabase:
 
-1. O sistema deve conectar automaticamente usando as credenciais pré-configuradas
-2. Caso haja problemas de conexão, verifique se as credenciais do Supabase estão corretas:
-   - URL: https://tuviuktrqqzxrnlyrxfl.supabase.co
-   - Chave Anônima: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1dml1a3RycXF6eHJubHlyeGZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkxNjI1NDksImV4cCI6MjA2NDczODU0OX0.JyCH9MHutqrui59cYbcqCHVImSZRGQCE5Ob8tF-TIeE
+1. Configure seu próprio projeto Supabase seguindo as instruções na seção "Configuração Obrigatória" acima
+2. Caso haja problemas de conexão, verifique se as credenciais do seu projeto Supabase estão corretas no arquivo `.env.local`
 
 ## Problemas Comuns
 
@@ -124,8 +122,11 @@ Em caso de problemas, entre em contato com o suporte técnico.
 
 Se necessário, você pode configurar manualmente as variáveis de ambiente criando um arquivo `.env.local` na pasta de instalação com o seguinte conteúdo:
 
+```bash
+# SUBSTITUA pelos valores do seu projeto Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_anon_aqui
+NEXT_PUBLIC_SUPABASE_SERVICE_KEY=sua_chave_service_aqui
 ```
-NEXT_PUBLIC_SUPABASE_URL=https://tuviuktrqqzxrnlyrxfl.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1dml1a3RycXF6eHJubHlyeGZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkxNjI1NDksImV4cCI6MjA2NDczODU0OX0.JyCH9MHutqrui59cYbcqCHVImSZRGQCE5Ob8tF-TIeE
-NEXT_PUBLIC_SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1dml1a3RycXF6eHJubHlyeGZsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0OTE2MjU0OSwiZXhwIjoyMDY0NzM4NTQ5fQ.CyKtbEh8eLtH9wlBJMA3lu8USi5mDAxHY6vibHM0fKU
-``` 
+
+**⚠️ IMPORTANTE:** Nunca use chaves de exemplo em produção. Sempre configure seu próprio projeto Supabase. 

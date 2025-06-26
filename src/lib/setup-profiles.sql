@@ -45,20 +45,19 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
 -- Inserir perfis para usuários existentes
+-- Todos os usuários começam como 'user' por padrão
 INSERT INTO profiles (id, email, role)
 SELECT 
   id, 
   email, 
-  CASE 
-    WHEN email = 'maicomdassi@gmail.com' THEN 'admin'
-    ELSE 'user'
-  END as role
+  'user' as role
 FROM auth.users
 ON CONFLICT (id) DO UPDATE SET
-  role = CASE 
-    WHEN EXCLUDED.email = 'maicomdassi@gmail.com' THEN 'admin'
-    ELSE profiles.role
-  END;
+  email = EXCLUDED.email,
+  updated_at = now();
+
+-- Para promover o primeiro usuário a admin, execute:
+-- UPDATE profiles SET role = 'admin' WHERE email = 'seu-email@exemplo.com';
 
 -- Atualizar timestamp function
 CREATE OR REPLACE FUNCTION public.handle_updated_at()
