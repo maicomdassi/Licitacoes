@@ -26,6 +26,7 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signUp: (email: string, password: string) => Promise<{ error: any }>
   signOut: () => Promise<void>
+  resetPassword: (email: string) => Promise<{ error: any }>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -138,13 +139,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut()
   }
 
+  const resetPassword = async (email: string) => {
+    if (USE_MOCK_AUTH) {
+      // Simular um pequeno delay para reset mockado
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return { error: null };
+    }
+    
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`
+    })
+    return { error }
+  }
+
   const value = {
     user,
     session,
     isLoading,
     signIn,
     signUp,
-    signOut
+    signOut,
+    resetPassword
   }
 
   return (
