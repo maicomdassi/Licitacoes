@@ -193,7 +193,7 @@ export default function ClassificacaoOtimizadaPage() {
                   Classificação Inteligente
                 </h2>
                 <p className="text-gray-700 dark:text-gray-300">
-                  Vamos buscar todas as licitações com interesse "P" e analisar quais devem ser alteradas
+                  Vamos buscar todas as licitações com interesse &quot;P&quot; e analisar quais devem ser alteradas
                 </p>
               </div>
               

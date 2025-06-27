@@ -1,67 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { getPortaisUnicos } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
     console.log('🔍 Verificando portais disponíveis...')
     
-    // Verificar se existe compras.rs.gov.br
-    const { data: comprasRS, error: erroComprasRS } = await supabase
-      .from('licitacoes')
-      .select('id, titulo, link_externo')
-      .ilike('link_externo', '%compras.rs.gov.br%')
-      .limit(5)
+    // Buscar portais para licitações pendentes
+    const { data: portaisPendentes, error: errorPendentes } = await getPortaisUnicos('P')
     
-    if (erroComprasRS) {
-      throw new Error(`Erro ao buscar compras.rs.gov.br: ${erroComprasRS.message}`)
+    if (errorPendentes) {
+      console.error('❌ Erro ao buscar portais pendentes:', errorPendentes)
+      return NextResponse.json({
+        success: false,
+        error: errorPendentes,
+        portaisPendentes: []
+      })
     }
     
-    // Buscar todos os portais únicos (limitado a 20 para análise)
-    const { data: todosRegistros, error: erroTodos } = await supabase
-      .from('licitacoes')
-      .select('link_externo')
-      .limit(1000)
+    console.log('✅ Portais pendentes encontrados:', portaisPendentes?.length || 0)
     
-    if (erroTodos) {
-      throw new Error(`Erro ao buscar todos os portais: ${erroTodos.message}`)
-    }
-    
-    // Extrair portais únicos
-    const portaisUnicos = new Set<string>()
-    todosRegistros?.forEach((item: any) => {
-      if (item.link_externo) {
-        try {
-          const url = new URL(item.link_externo)
-          const domain = url.hostname.toLowerCase()
-          if (domain && domain.includes('.')) {
-            portaisUnicos.add(domain)
-          }
-        } catch {
-          // Ignorar URLs inválidas
-        }
-      }
-    })
-    
-    const listaPortais = Array.from(portaisUnicos).slice(0, 20)
-    const temComprasRS = listaPortais.some(portal => portal.includes('compras.rs.gov.br'))
+    // Verificar se compras.rs.gov.br está na lista
+    const portalPadrao = 'compras.rs.gov.br'
+    const contemPortalPadrao = portaisPendentes?.includes(portalPadrao) || false
     
     return NextResponse.json({
       success: true,
-      comprasRSEncontrado: comprasRS?.length || 0,
-      temComprasRSNaLista: temComprasRS,
-      exemplosComprasRS: comprasRS?.slice(0, 3).map((item: any) => ({
-        id: item.id,
-        titulo: item.titulo.substring(0, 50) + '...',
-        link: item.link_externo
-      })) || [],
-      portaisUnicos: listaPortais,
-      totalPortaisAnalisados: portaisUnicos.size,
-      totalRegistrosAnalisados: todosRegistros?.length || 0
+      portaisPendentes: portaisPendentes || [],
+      totalPortais: portaisPendentes?.length || 0,
+      portalPadrao,
+      contemPortalPadrao,
+      primeiros5Portais: portaisPendentes?.slice(0, 5) || []
     })
     
   } catch (error) {
-    console.error('Erro na verificação de portais:', error)
-    
+    console.error('❌ Erro ao verificar portais:', error)
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erro desconhecido'

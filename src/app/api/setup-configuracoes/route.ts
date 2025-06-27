@@ -3,11 +3,10 @@ import { supabase } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔧 Executando setup da tabela configuracoes...')
+    console.log('🔧 Criando tabela configuracoes...')
     
-    // Script SQL para criar a tabela e configuração inicial
-    const setupSQL = `
-      -- Criar tabela de configurações do sistema
+    // Primeiro, tentar criar a tabela diretamente
+    const createTableQuery = `
       CREATE TABLE IF NOT EXISTS configuracoes (
         id SERIAL PRIMARY KEY,
         chave VARCHAR(100) UNIQUE NOT NULL,
@@ -16,70 +15,87 @@ export async function POST(request: NextRequest) {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
-
-      -- Inserir configuração padrão do portal
-      INSERT INTO configuracoes (chave, valor, descricao) 
-      VALUES (
-        'portal_padrao', 
-        'compras.rs.gov.br', 
-        'Portal padrão selecionado nos filtros de licitações'
-      ) ON CONFLICT (chave) DO NOTHING;
-
-      -- Criar índice para busca por chave
-      CREATE INDEX IF NOT EXISTS idx_configuracoes_chave ON configuracoes(chave);
     `
-
-    // Executar o SQL
-    const { error } = await supabase.rpc('exec_sql', { sql_query: setupSQL })
     
-    if (error) {
-      console.error('Erro ao executar setup SQL:', error)
+    // Usar uma consulta SQL direta
+    const { error: createError } = await supabase.rpc('exec_sql', { 
+      sql_query: createTableQuery 
+    })
+    
+    if (createError) {
+      console.log('Tentativa com RPC falhou, tentando método alternativo...')
       
-      // Tentar criar a tabela usando métodos alternativos
-      try {
-        // Criar tabela usando insert/upsert direto
-        const { error: insertError } = await supabase
-          .from('configuracoes')
-          .upsert({
-            chave: 'portal_padrao',
-            valor: 'compras.rs.gov.br',
-            descricao: 'Portal padrão selecionado nos filtros de licitações'
-          })
-        
-        if (insertError) {
-          throw new Error(`Erro ao inserir configuração: ${insertError.message}`)
-        }
-        
-        console.log('✅ Configuração criada com sucesso usando método alternativo')
-        
-        return NextResponse.json({
-          success: true,
-          message: 'Setup concluído com sucesso (método alternativo)',
-          method: 'direct_insert'
+      // Método alternativo: tentar inserir diretamente (se a tabela existir)
+      const { error: insertError } = await supabase
+        .from('configuracoes')
+        .upsert({
+          chave: 'portal_padrao',
+          valor: 'compras.rs.gov.br',
+          descricao: 'Portal padrão selecionado nos filtros de licitações'
+        }, {
+          onConflict: 'chave'
         })
-        
-      } catch (altError) {
-        throw new Error(`Falha no setup: ${error.message}. Método alternativo também falhou: ${altError}`)
+      
+      if (insertError) {
+        console.error('Erro ao inserir configuração:', insertError)
+        return NextResponse.json({
+          success: false,
+          error: 'Tabela configuracoes não existe. Execute o SQL manualmente no Supabase.',
+          sqlToExecute: `
+CREATE TABLE configuracoes (
+  id SERIAL PRIMARY KEY,
+  chave VARCHAR(100) UNIQUE NOT NULL,
+  valor TEXT NOT NULL,
+  descricao TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+INSERT INTO configuracoes (chave, valor, descricao) 
+VALUES ('portal_padrao', 'compras.rs.gov.br', 'Portal padrão selecionado nos filtros de licitações')
+ON CONFLICT (chave) DO NOTHING;
+
+CREATE INDEX IF NOT EXISTS idx_configuracoes_chave ON configuracoes(chave);
+          `
+        }, { status: 500 })
       }
+      
+      console.log('✅ Configuração inserida com sucesso (tabela já existia)')
+      return NextResponse.json({
+        success: true,
+        message: 'Configuração inserida com sucesso (tabela já existia)',
+        method: 'direct_insert'
+      })
     }
-
-    // Verificar se a configuração foi criada
-    const { data: config, error: selectError } = await supabase
+    
+    // Se chegou aqui, a tabela foi criada. Agora inserir a configuração padrão
+    const { error: insertError } = await supabase
       .from('configuracoes')
-      .select('*')
-      .eq('chave', 'portal_padrao')
-      .single()
-
-    if (selectError) {
-      console.warn('Aviso ao verificar configuração:', selectError)
+      .upsert({
+        chave: 'portal_padrao',
+        valor: 'compras.rs.gov.br',
+        descricao: 'Portal padrão selecionado nos filtros de licitações'
+      }, {
+        onConflict: 'chave'
+      })
+    
+    if (insertError) {
+      console.error('Erro ao inserir configuração:', insertError)
+      return NextResponse.json({
+        success: false,
+        error: `Tabela criada mas erro ao inserir configuração: ${insertError.message}`
+      }, { status: 500 })
     }
-
-    console.log('✅ Setup da tabela configuracoes concluído com sucesso')
+    
+    // Criar índice
+    const indexQuery = `CREATE INDEX IF NOT EXISTS idx_configuracoes_chave ON configuracoes(chave);`
+    await supabase.rpc('exec_sql', { sql_query: indexQuery })
+    
+    console.log('✅ Tabela configuracoes criada e configuração inserida com sucesso')
     
     return NextResponse.json({
       success: true,
-      message: 'Setup da tabela configuracoes concluído com sucesso',
-      config: config || null,
+      message: 'Tabela configuracoes criada e configuração inserida com sucesso',
       method: 'sql_rpc'
     })
 
@@ -92,7 +108,7 @@ export async function POST(request: NextRequest) {
       instructions: [
         'Execute manualmente no SQL Editor do Supabase:',
         '',
-        'CREATE TABLE IF NOT EXISTS configuracoes (',
+        'CREATE TABLE configuracoes (',
         '  id SERIAL PRIMARY KEY,',
         '  chave VARCHAR(100) UNIQUE NOT NULL,',
         '  valor TEXT NOT NULL,',
@@ -106,7 +122,9 @@ export async function POST(request: NextRequest) {
         '  \'portal_padrao\',',
         '  \'compras.rs.gov.br\',',
         '  \'Portal padrão selecionado nos filtros de licitações\'',
-        ') ON CONFLICT (chave) DO NOTHING;'
+        ') ON CONFLICT (chave) DO NOTHING;',
+        '',
+        'CREATE INDEX IF NOT EXISTS idx_configuracoes_chave ON configuracoes(chave);'
       ]
     }, { status: 500 })
   }

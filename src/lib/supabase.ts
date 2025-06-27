@@ -233,6 +233,114 @@ export async function testConnection() {
   }
 }
 
+// Função para carregar TODAS as licitações (para filtro por palavras-chave)
+export async function getAllLicitacoes(
+  filtroInteresse: 'P' | 'S' | 'N',
+  options?: { portal?: string }
+) {
+  try {
+    // Usar dados mockados em desenvolvimento
+    if (USE_MOCK) {
+      console.log('Carregando TODOS os dados mockados para filtro de palavras-chave');
+      let filteredData = MOCK_DATA.filter(item => item.interece === filtroInteresse);
+      
+      // Aplicar filtro de portal se especificado
+      if (options?.portal && options.portal !== 'todos') {
+        filteredData = filteredData.filter(item => {
+          if (!item.link_externo) return false;
+          try {
+            const url = new URL(item.link_externo);
+            const portal = url.hostname.replace('www.', '');
+            return portal === options.portal;
+          } catch {
+            return false;
+          }
+        });
+      }
+      
+      // Simular delay de rede
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      console.log(`📊 Carregados ${filteredData.length} registros COMPLETOS para filtro`);
+      
+      return {
+        data: filteredData,
+        total: filteredData.length
+      };
+    }
+
+    // Código para produção - carregar TODOS os registros
+    console.log('🔄 Carregando TODOS os registros para filtro de palavras-chave...', { filtroInteresse, portal: options?.portal });
+    
+    try {
+      // Construir a consulta para TODOS os registros
+      let query = supabase
+        .from('licitacoes')
+        .select('*')
+        .eq('interece', filtroInteresse);
+
+      // Aplicar filtro de portal se especificado
+      if (options?.portal && options.portal !== 'todos') {
+        console.log('Aplicando filtro de portal:', options.portal)
+        query = query.ilike('link_externo', `%${options.portal}%`);
+      }
+
+      const { data, error } = await query
+        .order('abertura_datetime', { ascending: false });
+
+      if (error) {
+        console.error('Erro na consulta completa:', error);
+        throw new Error(`Erro na consulta: ${error.message}`);
+      }
+
+      if (!data || data.length === 0) {
+        console.log('Nenhum dado encontrado na consulta completa');
+        return {
+          data: [],
+          total: 0
+        };
+      }
+
+      console.log(`📊 Carregados ${data.length} registros COMPLETOS para filtro`);
+      
+      return {
+        data: data as Licitacao[],
+        total: data.length
+      };
+    } catch (error) {
+      console.error('Erro na consulta completa:', error);
+      // Se houver erro, tentamos usar os dados mockados como fallback
+      if (isDev) {
+        console.log('Usando dados mockados como fallback após erro');
+        let filteredData = MOCK_DATA.filter(item => item.interece === filtroInteresse);
+        
+        // Aplicar filtro de portal se especificado
+        if (options?.portal && options.portal !== 'todos') {
+          filteredData = filteredData.filter(item => {
+            if (!item.link_externo) return false;
+            try {
+              const url = new URL(item.link_externo);
+              const portal = url.hostname.replace('www.', '');
+              return portal === options.portal;
+            } catch {
+              return false;
+            }
+          });
+        }
+        
+        return {
+          data: filteredData,
+          total: filteredData.length
+        };
+      }
+      throw error;
+    }
+  } catch (error) {
+    console.error('Erro detalhado:', error);
+    throw error;
+  }
+}
+
 export async function getLicitacoes(
   pagina: number,
   limite: number,

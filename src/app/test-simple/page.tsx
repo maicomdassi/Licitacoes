@@ -1,129 +1,169 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 
-export default function TestSimple() {
-  const [resultado, setResultado] = useState<any>(null)
-  const [loading, setLoading] = useState(false)
+export default function TestSimplePage() {
+  const [dados, setDados] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [stats, setStats] = useState<any>(null)
 
-  const testarFiltroPortal = async () => {
-    setLoading(true)
+  useEffect(() => {
+    testarConexao()
+  }, [])
+
+  const testarConexao = async () => {
     try {
-      console.log('=== TESTE DIRETO NO SUPABASE ===')
+      console.log('🔍 Testando conexão com Supabase...')
       
-      // Teste 1: Buscar todos os registros
-      console.log('1. Buscando todos os registros...')
-      const { data: todos, error: erroTodos } = await supabase
+      // Teste 1: Verificar se existe a tabela licitacoes
+      console.log('📊 Verificando tabela licitacoes...')
+      const { data: testData, error: testError } = await supabase
         .from('licitacoes')
-        .select('id, titulo, link_externo')
+        .select('id, titulo, interece, link_externo')
         .limit(5)
-      
-      if (erroTodos) throw erroTodos
-      
-      // Teste 2: Buscar apenas compras.rs.gov.br
-      console.log('2. Buscando apenas compras.rs.gov.br...')
-      const { data: filtrados, error: erroFiltrados } = await supabase
-        .from('licitacoes')
-        .select('id, titulo, link_externo')
-        .ilike('link_externo', '%compras.rs.gov.br%')
-        .limit(5)
-      
-      if (erroFiltrados) throw erroFiltrados
-      
-      // Teste 3: Verificar se existe algum registro com compras.rs.gov.br
-      console.log('3. Verificando existência de compras.rs.gov.br...')
-      const { data: existe, error: erroExiste } = await supabase
-        .from('licitacoes')
-        .select('id', { count: 'exact' })
-        .ilike('link_externo', '%compras.rs.gov.br%')
-      
-      if (erroExiste) throw erroExiste
-      
-      setResultado({
-        todos: {
-          total: todos?.length || 0,
-          exemplos: todos?.map((item: any) => ({
-            id: item.id,
-            titulo: item.titulo.substring(0, 30) + '...',
-            link: item.link_externo
-          })) || []
-        },
-        filtrados: {
-          total: filtrados?.length || 0,
-          exemplos: filtrados?.map((item: any) => ({
-            id: item.id,
-            titulo: item.titulo.substring(0, 30) + '...',
-            link: item.link_externo
-          })) || []
-        },
-        existeComprasRS: existe?.length || 0
+
+      if (testError) {
+        console.error('❌ Erro ao acessar tabela:', testError)
+        setError(`Erro ao acessar tabela: ${testError.message}`)
+        return
+      }
+
+      console.log('✅ Dados encontrados:', testData?.length || 0)
+      setDados(testData || [])
+
+      // Teste 2: Contar registros por status
+      console.log('📈 Contando registros por status...')
+      const statsResult = await Promise.all([
+        supabase.from('licitacoes').select('id', { count: 'exact' }).eq('interece', 'P'),
+        supabase.from('licitacoes').select('id', { count: 'exact' }).eq('interece', 'S'),
+        supabase.from('licitacoes').select('id', { count: 'exact' }).eq('interece', 'N'),
+        supabase.from('licitacoes').select('id', { count: 'exact' })
+      ])
+
+      const [pendentes, interesse, semInteresse, total] = statsResult
+
+      setStats({
+        pendentes: pendentes.count || 0,
+        interesse: interesse.count || 0,
+        semInteresse: semInteresse.count || 0,
+        total: total.count || 0
       })
-      
-    } catch (error) {
-      console.error('Erro no teste:', error)
-      setResultado({ erro: error instanceof Error ? error.message : 'Erro desconhecido' })
+
+      console.log('📊 Estatísticas:', {
+        pendentes: pendentes.count,
+        interesse: interesse.count,
+        semInteresse: semInteresse.count,
+        total: total.count
+      })
+
+    } catch (err) {
+      console.error('💥 Erro geral:', err)
+      setError(err instanceof Error ? err.message : 'Erro desconhecido')
     } finally {
       setLoading(false)
     }
   }
 
+  if (loading) {
+    return (
+      <div className="p-8">
+        <h1 className="text-2xl font-bold mb-4">Teste de Conexão - Carregando...</h1>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-8">
+        <h1 className="text-2xl font-bold mb-4 text-red-600">Erro de Conexão</h1>
+        <div className="bg-red-50 border border-red-200 rounded p-4">
+          <p className="text-red-800">{error}</p>
+        </div>
+        <button 
+          onClick={testarConexao}
+          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Tentar Novamente
+        </button>
+      </div>
+    )
+  }
+
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Teste Direto - Filtro Portal</h1>
+    <div className="p-8 max-w-4xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">Teste de Conexão com Supabase</h1>
       
-      <button 
-        onClick={testarFiltroPortal}
-        disabled={loading}
-        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
-      >
-        {loading ? 'Testando...' : 'Testar Filtro Portal'}
-      </button>
-      
-      {resultado && (
-        <div className="mt-6 space-y-4">
-          {resultado.erro ? (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-              <strong>Erro:</strong> {resultado.erro}
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <div className="bg-gray-100 p-4 rounded">
-                <h3 className="font-bold text-lg mb-2">Todos os Registros (5 primeiros)</h3>
-                <p><strong>Total encontrado:</strong> {resultado.todos.total}</p>
-                <div className="mt-2">
-                  {resultado.todos.exemplos.map((item: any, index: number) => (
-                    <div key={index} className="text-sm border-b py-1">
-                      <div><strong>ID:</strong> {item.id}</div>
-                      <div><strong>Título:</strong> {item.titulo}</div>
-                      <div><strong>Link:</strong> {item.link}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="bg-blue-100 p-4 rounded">
-                <h3 className="font-bold text-lg mb-2">Filtrados por compras.rs.gov.br</h3>
-                <p><strong>Total encontrado:</strong> {resultado.filtrados.total}</p>
-                <p><strong>Registros que contêm compras.rs.gov.br:</strong> {resultado.existeComprasRS}</p>
-                <div className="mt-2">
-                  {resultado.filtrados.exemplos.length > 0 ? (
-                    resultado.filtrados.exemplos.map((item: any, index: number) => (
-                      <div key={index} className="text-sm border-b py-1">
-                        <div><strong>ID:</strong> {item.id}</div>
-                        <div><strong>Título:</strong> {item.titulo}</div>
-                        <div><strong>Link:</strong> {item.link}</div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-red-600">Nenhum registro encontrado com compras.rs.gov.br</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+      {/* Estatísticas */}
+      {stats && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+            <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
+            <div className="text-sm text-blue-800">Total</div>
+          </div>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+            <div className="text-2xl font-bold text-yellow-600">{stats.pendentes}</div>
+            <div className="text-sm text-yellow-800">Pendentes</div>
+          </div>
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+            <div className="text-2xl font-bold text-green-600">{stats.interesse}</div>
+            <div className="text-sm text-green-800">Com Interesse</div>
+          </div>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+            <div className="text-2xl font-bold text-red-600">{stats.semInteresse}</div>
+            <div className="text-sm text-red-800">Sem Interesse</div>
+          </div>
         </div>
       )}
+
+      {/* Primeiros registros */}
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold mb-4">Primeiros 5 registros encontrados:</h2>
+        {dados.length === 0 ? (
+          <div className="bg-yellow-50 border border-yellow-200 rounded p-4">
+            <p className="text-yellow-800">Nenhum registro encontrado na tabela licitacoes</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {dados.map((item, index) => (
+              <div key={item.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs bg-gray-100 px-2 py-1 rounded">ID: {item.id}</span>
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        item.interece === 'P' ? 'bg-yellow-100 text-yellow-800' :
+                        item.interece === 'S' ? 'bg-green-100 text-green-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {item.interece === 'P' ? 'Pendente' : 
+                         item.interece === 'S' ? 'Com Interesse' : 'Sem Interesse'}
+                      </span>
+                    </div>
+                    <h3 className="font-medium text-gray-900 mb-2">
+                      {item.titulo || 'Sem título'}
+                    </h3>
+                    {item.link_externo && (
+                      <p className="text-sm text-gray-600">
+                        Portal: {new URL(item.link_externo).hostname}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <button 
+        onClick={testarConexao}
+        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        Atualizar Dados
+      </button>
     </div>
   )
 } 

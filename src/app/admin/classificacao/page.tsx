@@ -8,6 +8,8 @@ import {
   gerarRelatorioClassificacao 
 } from '@/lib/classificacao-inteligente'
 import { CheckCircle, XCircle, Clock, AlertTriangle, Download, Play, Trash2, Copy, Search } from 'lucide-react'
+import { AppLayout } from '@/components/layout/AppLayout'
+import AdminRoute from '@/components/auth/AdminRoute'
 
 interface ClassificacaoResult {
   success: boolean
@@ -228,7 +230,9 @@ export default function ClassificacaoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <AdminRoute>
+      <AppLayout>
+        <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
@@ -319,14 +323,14 @@ export default function ClassificacaoPage() {
                   <div className="text-3xl font-bold text-green-600">
                     {resultado.mantidos}
                   </div>
-                  <div className="text-sm text-green-800 font-medium">Mantidos como "P"</div>
+                  <div className="text-sm text-green-800 font-medium">Mantidos como &quot;P&quot;</div>
                 </div>
                 
                 <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-center">
                   <div className="text-3xl font-bold text-orange-600">
                     {resultado.alterados}
                   </div>
-                  <div className="text-sm text-orange-800 font-medium">Alterados para "N"</div>
+                  <div className="text-sm text-orange-800 font-medium">Alterados para &quot;N&quot;</div>
                 </div>
                 
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
@@ -608,7 +612,7 @@ export default function ClassificacaoPage() {
             {/* Manter como P */}
             <div>
               <h3 className="text-lg font-medium text-green-700 mb-4 flex items-center">
-                🟢 Manter como "P" (Participando)
+                🟢 Manter como &quot;P&quot; (Participando)
               </h3>
               <div className="space-y-3">
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3">
@@ -644,7 +648,7 @@ export default function ClassificacaoPage() {
             {/* Alterar para N */}
             <div>
               <h3 className="text-lg font-medium text-red-700 mb-4 flex items-center">
-                🔴 Alterar para "N" (Sem Interesse)
+                🔴 Alterar para &quot;N&quot; (Sem Interesse)
               </h3>
               <div className="space-y-3">
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3">
@@ -690,7 +694,7 @@ export default function ClassificacaoPage() {
             {resultado.detalhes.alteradosParaN.length > 0 && (
               <div className="mb-8">
                 <h3 className="text-lg font-medium text-orange-700 mb-4">
-                  🔄 Licitações Alteradas para "N" ({resultado.detalhes.alteradosParaN.length})
+                  🔄 Licitações Alteradas para &quot;N&quot; ({resultado.detalhes.alteradosParaN.length})
                 </h3>
                 <div className="max-h-96 overflow-y-auto space-y-3 border rounded-lg p-4 bg-orange-50">
                   {resultado.detalhes.alteradosParaN.slice(0, 10).map((item, index) => (
@@ -744,5 +748,7 @@ export default function ClassificacaoPage() {
         )}
       </div>
     </div>
+      </AppLayout>
+    </AdminRoute>
   )
 } 

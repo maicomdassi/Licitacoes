@@ -265,7 +265,7 @@ export default function TestConnectionPage() {
           <li>Verifique se o projeto Supabase está online</li>
           <li>Verifique se há problemas de DNS ou rede</li>
           <li>Verifique se há bloqueios de firewall ou proxy</li>
-          <li>Verifique se a tabela 'licitacoes' existe no banco de dados</li>
+          <li>Verifique se a tabela &apos;licitacoes&apos; existe no banco de dados</li>
           <li>Verifique se as políticas de RLS estão configuradas corretamente</li>
           <li>Tente acessar diretamente <a href={supabaseInfo.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">a URL do Supabase</a> para ver se o serviço está respondendo</li>
         </ul>

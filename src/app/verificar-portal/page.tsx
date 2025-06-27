@@ -75,7 +75,7 @@ export default function VerificarPortal() {
               {!resultado.temComprasRS && (
                 <div className="p-4 bg-blue-100 border border-blue-300 rounded">
                   <h3 className="font-bold mb-2">💡 Sugestão:</h3>
-                  <p>O portal 'compras.rs.gov.br' não foi encontrado nos dados atuais. 
+                  <p>O portal &apos;compras.rs.gov.br&apos; não foi encontrado nos dados atuais. 
                      Isso pode explicar por que o filtro não está funcionando. 
                      Considere usar um dos portais listados acima como padrão.</p>
                 </div>

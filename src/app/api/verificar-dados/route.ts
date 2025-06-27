@@ -1,72 +1,59 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabase, getConfiguracao } from '@/lib/supabase'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    console.log('🔍 Verificando dados na tabela licitacoes...')
-    
-    // Verificar total de registros
-    const { data: total, error: totalError } = await supabase
-      .from('licitacoes')
-      .select('id', { count: 'exact' })
-    
-    if (totalError) {
-      throw new Error(`Erro ao contar total: ${totalError.message}`)
-    }
-    
-    // Verificar distribuição por interece
-    const { data: distribuicao, error: distError } = await supabase
-      .from('licitacoes')
-      .select('interece')
-    
-    if (distError) {
-      throw new Error(`Erro ao verificar distribuição: ${distError.message}`)
-    }
-    
-    // Contar por categoria
-    const contagem = {
-      P: distribuicao?.filter((item: any) => item.interece === 'P').length || 0,
-      S: distribuicao?.filter((item: any) => item.interece === 'S').length || 0,
-      N: distribuicao?.filter((item: any) => item.interece === 'N').length || 0,
-      outros: distribuicao?.filter((item: any) => !['P', 'S', 'N'].includes(item.interece)).length || 0
-    }
-    
-    // Pegar alguns exemplos de cada categoria
-    const exemploP = await supabase
-      .from('licitacoes')
-      .select('id, titulo, objeto, interece')
-      .eq('interece', 'P')
-      .limit(3)
-    
-    const exemploS = await supabase
-      .from('licitacoes')
-      .select('id, titulo, objeto, interece')
-      .eq('interece', 'S')
-      .limit(3)
-    
-    const exemploN = await supabase
-      .from('licitacoes')
-      .select('id, titulo, objeto, interece')
-      .eq('interece', 'N')
-      .limit(3)
-    
-    return NextResponse.json({
-      success: true,
-      totalRegistros: distribuicao?.length || 0,
-      distribuicao: contagem,
+    console.log('🔍 Verificando dados no banco...')
+
+    // Contar licitações por status
+    const [pendentes, interesse, semInteresse, total] = await Promise.all([
+      supabase.from('licitacoes').select('id', { count: 'exact' }).eq('interece', 'P'),
+      supabase.from('licitacoes').select('id', { count: 'exact' }).eq('interece', 'S'), 
+      supabase.from('licitacoes').select('id', { count: 'exact' }).eq('interece', 'N'),
+      supabase.from('licitacoes').select('id', { count: 'exact' })
+    ])
+
+    // Buscar alguns exemplos de cada status
+    const [exemplosPendentes, exemplosInteresse, exemplosSemInteresse] = await Promise.all([
+      supabase.from('licitacoes').select('id, titulo, interece').eq('interece', 'P').limit(3),
+      supabase.from('licitacoes').select('id, titulo, interece').eq('interece', 'S').limit(3),
+      supabase.from('licitacoes').select('id, titulo, interece').eq('interece', 'N').limit(3)
+    ])
+
+    // Verificar portal padrão configurado
+    const { data: portalPadrao } = await getConfiguracao('portal_padrao')
+
+    const resultado = {
+      estatisticas: {
+        total: total.count || 0,
+        pendentes: pendentes.count || 0,
+        comInteresse: interesse.count || 0,
+        semInteresse: semInteresse.count || 0
+      },
       exemplos: {
-        P: exemploP.data || [],
-        S: exemploS.data || [],
-        N: exemploN.data || []
+        pendentes: exemplosPendentes.data || [],
+        comInteresse: exemplosInteresse.data || [],
+        semInteresse: exemplosSemInteresse.data || []
+      },
+      configuracao: {
+        portalPadrao: portalPadrao || 'Não configurado'
+      },
+      erros: {
+        pendentes: pendentes.error?.message,
+        interesse: interesse.error?.message,
+        semInteresse: semInteresse.error?.message,
+        total: total.error?.message
       }
-    })
-    
+    }
+
+    console.log('📊 Resultado da verificação:', resultado)
+
+    return NextResponse.json(resultado)
   } catch (error) {
-    console.error('Erro na verificação de dados:', error)
-    
-    return NextResponse.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Erro desconhecido'
-    }, { status: 500 })
+    console.error('❌ Erro ao verificar dados:', error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Erro desconhecido' },
+      { status: 500 }
+    )
   }
 } 
