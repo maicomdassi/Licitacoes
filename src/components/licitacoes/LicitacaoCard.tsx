@@ -118,9 +118,9 @@ export function LicitacaoCard({ licitacao, onEdit, onSemInteresse, onComInteress
       <div className="mb-6 bg-muted/30 dark:bg-muted/10 p-4 rounded-lg border border-border/30">
         <h4 className="text-sm font-medium mb-2 flex items-center gap-1">
           <span className="inline-block w-1 h-4 bg-primary rounded-full mr-1"></span>
-          Objeto
+          Objeto da Licitação
         </h4>
-        <p className="text-sm whitespace-pre-wrap line-clamp-4">{licitacao.objeto}</p>
+        <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">{licitacao.objeto}</p>
       </div>
       
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -149,13 +149,13 @@ export function LicitacaoCard({ licitacao, onEdit, onSemInteresse, onComInteress
           )}
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           {/* Licitações pendentes: mostrar ambos os botões */}
           {licitacao.interece === 'P' && (
             <>
               <button
                 onClick={() => onSemInteresse(licitacao)}
-                className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition-colors dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-800/30"
+                className="inline-flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition-colors dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-800/30 w-full sm:w-auto"
               >
                 <ThumbsDown size={16} />
                 <span>Sem Interesse</span>
@@ -163,7 +163,7 @@ export function LicitacaoCard({ licitacao, onEdit, onSemInteresse, onComInteress
               
               <button
                 onClick={() => onComInteresse(licitacao)}
-                className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50 border border-green-200 dark:border-green-800/30"
+                className="inline-flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50 border border-green-200 dark:border-green-800/30 w-full sm:w-auto"
               >
                 <ThumbsUp size={16} />
                 <span>Com Interesse</span>
@@ -176,7 +176,7 @@ export function LicitacaoCard({ licitacao, onEdit, onSemInteresse, onComInteress
             <>
               <button
                 onClick={() => onSemInteresse(licitacao)}
-                className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition-colors dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-800/30"
+                className="inline-flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition-colors dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-800/30 w-full sm:w-auto"
               >
                 <ThumbsDown size={16} />
                 <span>Sem Interesse</span>
@@ -184,7 +184,7 @@ export function LicitacaoCard({ licitacao, onEdit, onSemInteresse, onComInteress
               
               <button
                 onClick={() => onComInteresse(licitacao)}
-                className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50 border border-green-200 dark:border-green-800/30"
+                className="inline-flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50 border border-green-200 dark:border-green-800/30 w-full sm:w-auto"
               >
                 <Edit size={16} />
                 <span>Editar Interesse</span>
@@ -196,7 +196,7 @@ export function LicitacaoCard({ licitacao, onEdit, onSemInteresse, onComInteress
           {licitacao.interece === 'N' && (
             <button
               onClick={() => onComInteresse(licitacao)}
-              className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50 border border-green-200 dark:border-green-800/30"
+              className="inline-flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50 border border-green-200 dark:border-green-800/30 w-full sm:w-auto"
             >
               <ThumbsUp size={16} />
               <span>Com Interesse</span>
